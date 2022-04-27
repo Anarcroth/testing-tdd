@@ -1,7 +1,9 @@
 package tdd.logic.booking;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,35 +11,66 @@ import org.apache.commons.lang3.Validate;
 
 public class BookingSystem {
 
-	private final Set<Integer> bookedHours;
+	private final Map<String, BookedHours> bookingSystem;
 
-	public BookingSystem(Integer... hoursToBook) {
+	public BookingSystem() {
 
-		bookedHours = new HashSet<>();
-		addBookings(hoursToBook);
+		bookingSystem = new HashMap<>();
 	}
 
-	public List<Integer> getBookedHours() {
+	public BookingSystem(String thing, Integer... hoursToBook) {
 
-		return bookedHours.stream().collect(Collectors.toList());
+		bookingSystem = new HashMap<>();
+		addBookings(thing, hoursToBook);
 	}
 
-	public void addBooking(Integer toBook) {
+	public List<Integer> getBookedHours(String thing) {
 
-		Validate.notNull(toBook, "Booking hour cannot be null!");
-		Validate.isTrue(toBook >= 0 && toBook <= 24, "Booking cannot be for an illegal hour");
+		return bookingSystem.get(thing).getBookedHours();
+	}
 
-		if (!bookedHours.add(toBook)) {
+	public void addBooking(String thing, Integer hourToBook) {
 
-			throw new IllegalArgumentException(String.format("Cannot add a booking to the same hour [%d]!", toBook));
+		bookingSystem.computeIfAbsent(thing, k -> new BookedHours()).addBooking(hourToBook);
+	}
+
+	public void addBookings(String thing, Integer... hoursToBook) {
+
+		bookingSystem.computeIfAbsent(thing, k -> new BookedHours()).addBookings(hoursToBook);
+	}
+
+	private static class BookedHours {
+
+		private final Set<Integer> bookedHours;
+
+		BookedHours() {
+
+			bookedHours = new HashSet<>();
 		}
-	}
 
-	public void addBookings(Integer... hoursToBook) {
+		public List<Integer> getBookedHours() {
 
-		for (Integer hour : hoursToBook) {
+			return bookedHours.stream().collect(Collectors.toList());
+		}
 
-			addBooking(hour);
+		private void addBooking(Integer toBook) {
+
+			Validate.notNull(toBook, "Booking hour cannot be null!");
+			Validate.isTrue(toBook >= 0 && toBook <= 24, "Booking cannot be for an illegal hour");
+
+			if (!bookedHours.add(toBook)) {
+
+				throw new IllegalArgumentException(
+						String.format("Cannot add a booking to the same hour [%d]!", toBook));
+			}
+		}
+
+		public void addBookings(Integer... hoursToBook) {
+
+			for (Integer hour : hoursToBook) {
+
+				addBooking(hour);
+			}
 		}
 	}
 }
